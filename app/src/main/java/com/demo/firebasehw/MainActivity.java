@@ -1,7 +1,9 @@
 package com.demo.firebasehw;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -11,6 +13,7 @@ import android.widget.Toast;
 
 import com.demo.firebasehw.adapters.UsersAdapter;
 import com.demo.firebasehw.pojo.User;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -24,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private FloatingActionButton fab;
     private UsersAdapter adapter;
     private FirebaseFirestore db;
+    private String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         db = FirebaseFirestore.getInstance();
         loadData();
+        swipe();
         recyclerView.setAdapter(adapter);
 
         fab.setOnClickListener(view -> {
@@ -58,5 +63,34 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
+    }
+
+    private void swipe() {
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView,
+                                  @NonNull RecyclerView.ViewHolder viewHolder,
+                                  @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                db.collection("users").get()
+                        .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                            @Override
+                            public void onSuccess(QuerySnapshot querySnapshots) {
+                                for (int i = 0; i < querySnapshots.getDocuments().size(); i++) {
+                                    if (i == viewHolder.getAdapterPosition()) {
+                                        userId = querySnapshots.getDocuments().get(i).getId();
+                                        db.collection("users").document(userId).delete();
+                                        return;
+                                    }
+                                }
+                            }
+                        });
+            }
+        });
+        itemTouchHelper.attachToRecyclerView(recyclerView);
     }
 }
