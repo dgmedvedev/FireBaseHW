@@ -15,14 +15,11 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private List<User> users;
     private RecyclerView recyclerView;
     private FloatingActionButton fab;
     private UsersAdapter adapter;
@@ -33,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         fab = findViewById(R.id.fab);
-        users = new ArrayList<>();
         adapter = new UsersAdapter();
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -51,21 +47,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void clearList() {
-        users.clear();
-    }
-
     private void loadData() {
         db.collection("users")
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
                     public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
-                        clearList();
                         if (value != null) {
-                            for (QueryDocumentSnapshot documentSnapshot : value) {
-                                User user = documentSnapshot.toObject(User.class);
-                                users.add(user);
-                            }
+                            List<User> users = value.toObjects(User.class);
                             adapter.setUsers(users);
                         }
                     }

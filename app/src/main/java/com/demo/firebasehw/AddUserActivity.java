@@ -1,5 +1,6 @@
 package com.demo.firebasehw;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -11,6 +12,9 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.demo.firebasehw.pojo.User;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 public class AddUserActivity extends AppCompatActivity {
@@ -38,9 +42,6 @@ public class AddUserActivity extends AppCompatActivity {
         buttonSave.setOnClickListener(view -> {
             if (isFilled()) {
                 addUser();
-                Intent intent = new Intent(AddUserActivity.this, MainActivity.class);
-                startActivity(intent);
-                finish();
             } else {
                 Toast.makeText(this, "Все поля должны быть заполнены", Toast.LENGTH_SHORT).show();
             }
@@ -72,7 +73,11 @@ public class AddUserActivity extends AppCompatActivity {
         int age = Integer.parseInt(editTextAge.getText().toString());
         String sex = editTextSex.getText().toString();
         User user = new User(name, lastname, age, sex);
-        db.collection("users").add(user);
+        db.collection("users").add(user)
+                .addOnSuccessListener(documentReference -> finish())
+                .addOnFailureListener(e -> Toast.makeText(AddUserActivity.this,
+                        "Error: " + e.getMessage(),
+                        Toast.LENGTH_SHORT).show());
     }
 
     private boolean isFilled() {
